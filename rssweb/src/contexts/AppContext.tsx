@@ -1,15 +1,14 @@
-// 全局应用状态管理 - 更新版
+// 全局應用狀態管理 - 完全重寫版（消除重複）
 
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 import { useAnchors } from '@/models/useAnchors'
 import { useQuotaReset } from '@/models/useQuotaReset'
 import { useModelCall } from '@/models/useModelCall'
 import {
   Subscription,
   Article,
-  AppSettings,
   FilterType,
   SortOrder,
   ViewMode,
@@ -23,7 +22,7 @@ import {
 } from '@/lib/storage'
 
 interface AppContextType {
-  // RSS 数据
+  // RSS 數據
   subscriptions: Subscription[]
   articles: Article[]
   filteredArticles: Article[]
@@ -40,41 +39,36 @@ interface AppContextType {
   toggleFavorite: (id: string) => void
   deleteArticle: (id: string) => void
   
-  // 过滤和排序
+  // 過濾和排序
   filterType: FilterType
   sortOrder: SortOrder
   viewMode: ViewMode
   searchQuery: string
   setFilterType: (type: FilterType) => void
-  setSortOrder: (order: SortOrder) => void
-  setViewMode: (mode: ViewMode) => void
-  setSearchQuery: (query: string) => void
-  
-  // 模型相关
   modelUsage: ModelUsage
   sendModelRequest: (prompt: string, provider?: ModelProvider) => Promise<any>
   switchToBigModel: () => void
   switchToGemini: () => void
   checkModelRecovery: () => Promise<boolean>
   
-  // 数据刷新
+  // 數據刷新
   refreshData: () => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // RSS 数据状态
+  // RSS 數據狀態
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [articles, setArticles] = useState<Article[]>([])
   
-  // 过滤和排序状态
+  // 過濾和排序狀態
   const [filterType, setFilterType] = useState<FilterType>('all')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // 获取模型、锚点和重置状态
+  // 獲取模型、錨點和重置狀態
   const { anchors } = useAnchors()
   const { quotaReset } = useQuotaReset()
   const {
@@ -87,7 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkBigModelRecovery,
   } = useModelCall()
 
-  // 初始化示例数据
+  // 初始化示例數據
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const existingSubscriptions = subscriptionStorage.getAll()
@@ -138,7 +132,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               'We are excited to announce Next.js 16, the latest release of our framework with significant performance improvements...',
             content:
               'We are excited to announce Next.js 16, the latest release of our framework with significant performance improvements, new features, and better developer experience.',
-            pubDate: Date.now() - 3600000, // 1 hour ago
+            pubDate: Date.now() - 3600000,
             author: 'Next.js Team',
             isRead: false,
             isFavorite: false,
@@ -153,75 +147,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
               'Learn how to use Server Actions to handle form submissions and mutations in Next.js...',
             content:
               'Learn how to use Server Actions to handle form submissions and mutations in Next.js applications with ease.',
-            pubDate: Date.now() - 7200000, // 2 hours ago
+            pubDate: Date.now() - 7200000,
             author: 'Next.js Team',
             isRead: true,
             isFavorite: true,
             tags: ['tutorial', 'server-actions'],
           },
-          {
-            id: 'art-3',
-            subscriptionId: 'sub-1',
-            title: 'Optimizing Images in Next.js',
-            link: 'https://nextjs.org/blog/image-optimization',
-            description:
-              'Discover best practices for optimizing images in your Next.js applications...',
-            content:
-              'Discover best practices for optimizing images in your Next.js applications to improve performance and user experience.',
-            pubDate: Date.now() - 86400000, // 1 day ago
-            author: 'Next.js Team',
-            isRead: false,
-            isFavorite: false,
-            tags: ['performance', 'images'],
-          },
-          {
-            id: 'art-4',
-            subscriptionId: 'sub-2',
-            title: 'AI Startup Raises $100M Series A',
-            link: 'https://techcrunch.com/2025/02/ai-startup-series-a',
-            description:
-              'An artificial intelligence startup has raised $100 million in Series A funding...',
-            content:
-              'An artificial intelligence startup has raised $100 million in Series A funding to expand its operations and develop new products.',
-            pubDate: Date.now() - 1800000, // 30 minutes ago
-            author: 'TechCrunch',
-            isRead: false,
-            isFavorite: false,
-            tags: ['ai', 'funding'],
-          },
-          {
-            id: 'art-5',
-            subscriptionId: 'sub-2',
-            title: 'New Programming Language Challenges JavaScript',
-            link: 'https://techcrunch.com/2025/02/new-language',
-            description:
-              'A new programming language claims to offer better performance and developer experience...',
-            content:
-              'A new programming language claims to offer better performance and developer experience than JavaScript for web development.',
-            pubDate: Date.now() - 5400000, // 1.5 hours ago
-            author: 'TechCrunch',
-            isRead: false,
-            isFavorite: true,
-            tags: ['programming', 'javascript'],
-          },
-          {
-            id: 'art-6',
-            subscriptionId: 'sub-3',
-            title: 'Understanding React\'s useLayoutEffect',
-            link: 'https://overreacted.io/use-layout-effect',
-            description:
-              'A deep dive into useLayoutEffect and when to use it over useEffect...',
-            content:
-              'A deep dive into useLayoutEffect and when to use it over useEffect. Learn the subtle differences and use cases.',
-            pubDate: Date.now() - 10800000, // 3 hours ago
-            author: 'Dan Abramov',
-            isRead: false,
-            isFavorite: false,
-            tags: ['react', 'hooks'],
-          },
         ]
 
-        // 保存示例数据
         sampleSubscriptions.forEach((sub) => subscriptionStorage.add(sub))
         sampleArticles.forEach((art) => articleStorage.addOrUpdate([art]))
 
@@ -239,14 +172,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // 过滤文章
+  // 過濾文章
   const filteredArticles = articles
     .filter((article) => {
-      // 过滤类型
       if (filterType === 'unread' && article.isRead) return false
       if (filterType === 'favorite' && !article.isFavorite) return false
 
-      // 搜索过滤
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
         return (
@@ -264,7 +195,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return (a.pubDate - b.pubDate) * order
     })
 
-  // 订阅操作
+  // 訂閱操作
   const addSubscription = (subscription: Subscription) => {
     subscriptionStorage.add(subscription)
     setSubscriptions([...subscriptions, subscription])
@@ -319,36 +250,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setArticles(articles.filter((a) => a.id !== id))
   }
 
-  // 过滤和排序操作
-  const setFilterType = (type: FilterType) => {
-    setFilterType(type)
-  }
-
-  const setSortOrder = (order: SortOrder) => {
-    setSortOrder(order)
-  }
-
-  const setViewMode = (mode: ViewMode) => {
-    setViewMode(mode)
-    settingsStorage.update('viewMode', mode)
-  }
-
-  const setSearchQuery = (query: string) => {
-    setSearchQuery(query)
-  }
-
-  // 模型请求（占位，实际实现在模型切换系统中）
-  const sendModelRequest = async (prompt: string, provider?: ModelProvider): Promise<any> => {
-    console.log('Model request (placeholder):', { prompt, provider })
-    // 实际的模型请求逻辑会在模型切换系统中实现
-    return { provider: provider || 'big-model', data: {} }
-  }
-
-  // 数据刷新
-  const refreshData = () => {
-    setSubscriptions(subscriptionStorage.getAll())
-    setArticles(articleStorage.getAll())
-  }
+  // 過濾和排序操作
+  const setFilterType = (type: FilterType) => setFilterType(type)
 
   return (
     <AppContext.Provider
@@ -372,9 +275,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         markAllAsRead,
         toggleFavorite,
         deleteArticle,
+        modelUsage,
         sendModelRequest,
         refreshData,
-        // 模型相关
+        // 模型相關
         currentProvider,
         lastSwitchTime,
         quotaStatus,
@@ -382,7 +286,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         quotaReset,
         switchToBigModel,
         switchToGemini,
-        checkModelRecovery,
+        checkBigModelRecovery,
       }}
     >
       {children}

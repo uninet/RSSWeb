@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
+import { useAutoRefresh } from '@/models/useAutoRefresh'
 import {
   Search,
   Plus,
@@ -13,6 +14,9 @@ import {
   Zap,
   CheckCircle2,
   AlertTriangle,
+  RefreshCw,
+  Pause,
+  Play,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,11 +52,30 @@ export default function HomePage() {
     switchToGemini,
   } = useApp()
 
+  // 自动刷新功能
+  const {
+    isRefreshing,
+    lastRefreshTime,
+    refreshCount,
+    isPaused,
+    refreshAllSubscriptions,
+    togglePause,
+  } = useAutoRefresh()
+
   const unreadCount = filteredArticles.filter((a) => !a.isRead).length
   const favoriteCount = filteredArticles.filter((a) => a.isFavorite).length
 
   const handleVisit = (link: string) => {
     window.open(link, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleRefreshAll = async () => {
+    await refreshAllSubscriptions()
+  }
+
+  const formatTime = (isoString: string | null) => {
+    if (!isoString) return '从未刷新'
+    return new Date(isoString).toLocaleString('zh-CN')
   }
 
   return (
@@ -105,17 +128,39 @@ export default function HomePage() {
                   </a>
                 </Button>
               )}
-              
-              <div className="flex items-center gap-1 text-xs text-zinc-500">
-                {lastSwitchTime && (
-                  <>
-                    <span>上次切换:</span>
-                    <span className="font-semibold">
-                      {new Date(lastSwitchTime).toLocaleTimeString('zh-CN')}
-                    </span>
-                  </>
+
+              {/* 自动刷新控制 */}
+              <div className="flex items-center gap-2">
+                {isRefreshing ? (
+                  <RefreshCw className="h-4 w-4 text-blue-600 animate-spin" />
+                ) : isPaused ? (
+                  <Play className="h-4 w-4 text-zinc-500" />
+                ) : (
+                  <Pause className="h-4 w-4 text-zinc-500" />
                 )}
+                <div className="flex items-center gap-1 text-xs text-zinc-500">
+                  {isPaused ? (
+                    <span>已暂停</span>
+                  ) : isRefreshing ? (
+                    <span>刷新中...</span>
+                  ) : (
+                    <>
+                      <span>刷新</span>
+                      <span className="font-semibold">{refreshCount} 次</span>
+                    </>
+                  )}
+                </div>
               </div>
+
+              {/* 最后刷新时间 */}
+              {lastRefreshTime && (
+                <div className="flex items-center gap-1 text-xs text-zinc-500">
+                  <span>上次刷新:</span>
+                  <span className="font-semibold">
+                    {formatTime(lastRefreshTime.toISOString())}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Search and Filter */}

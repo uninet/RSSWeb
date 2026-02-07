@@ -11,55 +11,58 @@ import {
 } from './reset-time-detector'
 
 export function useResetDetector() {
-  const [systemState, setSystemState] = useState({
-    latestResetTime: null as string | null,
-    nextCheckTime: 0,
-    isDetecting: false,
-    lastDetectionTime: 0,
-  })
+  const [isDetecting, setIsDetecting] = useState(false)
+  const [latestResetTime, setLatestResetTime] = useState<string | null>(null)
+  const [detectionCount, setDetectionCount] = useState(0)
+  const [lastDetectionTime, setLastDetectionTime] = useState<Date | null>(null)
 
-  // 初始化：检查是否有记录的重置时间
+  // 初始化：从 localStorage 读取最新的重置时间
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const resetTime = getLatestResetTime()
       if (resetTime) {
-        const nextCheckTime = calculateNextCheckTime(resetTime)
-        setSystemState(prev => ({
-          ...prev,
-          latestResetTime: resetTime,
-          nextCheckTime: nextCheckTime,
-        }))
+        setLatestResetTime(resetTime)
+        console.log('初始化重置时间:', resetTime)
       }
     }
   }, [])
 
-  // 自动探测循环（每分钟检查一次是否需要探测）
+  // 自动探测循环
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now()
+    if (isDetecting) {
+      console.log('正在探测中，跳过自动探测')
+      return
+    }
 
-      // 检查是否应该探测新的重置时间
-      if (shouldDetectNewReset()) {
-        console.log('应该探测新的重置时间，开始探测...')
-        performDetection()
-      }
+    const now = Date.now()
+    const nextCheckTimeStr = localStorage.getItem('next_check_time')
 
-      // 检查是否到达下次检查时间
-      if (systemState.nextCheckTime && now >= systemState.nextCheckTime) {
-        console.log('到达下次检查时间，开始探测...')
-        performDetection()
-      }
-    }, 60000) // 每分钟检查一次
+    if (!nextCheckTimeStr) {
+      console.log('没有下次检查时间，开始探测')
+      performDetection()
+      return
+    }
 
-    return () => clearInterval(interval)
-  }, [systemState.nextCheckTime])
+    const nextCheckTime = parseInt(nextCheckTimeStr, 10)
+
+    // 如果到了检查时间，开始探测
+    if (now >= nextCheckTime) {
+      console.log('到了检查时间，开始探测')
+      performDetection()
+    } else {
+      console.log('未到检查时间，等待...')
+      const remaining = nextCheckTime - now
+      console.log(`距离下次检查还有 ${Math.round(remaining / 60000)} 分钟`)
+    }
+  }, [isDetecting])
 
   // 执行探测
   const performDetection = useCallback(async () => {
-    setSystemState(prev => ({ ...prev, isDetecting: true }))
+    console.log('开始探测 Big Model 重置时间...')
+    setIsDetecting(true)
 
     try {
-      // 调用最小化 API 探测重置时间
+      // 探测重置时间
       const resetTime = await detectResetTime()
 
       if (resetTime) {
@@ -71,17 +74,15 @@ export function useResetDetector() {
         }
         saveResetRecord(record)
 
-        // 计算下次检查时间（重置时间 + 5 小时）
+        // 保存下次检查时间（重置时间 + 5 小时）
         const nextCheckTime = calculateNextCheckTime(resetTime)
+        saveNextCheckTime(nextCheckTime)
 
-        setSystemState(prev => ({
-          ...prev,
-          latestResetTime: resetTime,
-          nextCheckTime: nextCheckTime,
-          lastDetectionTime: Date.now(),
-        }))
+        setLatestResetTime(resetTime)
+        setLastDetectionTime(new Date())
+        setDetectionCount(prev => prev + 1)
 
-        console.log(`✅ 重置时间已探测并锚定: ${resetTime}`)
+        console.log(`✅ 探测到重置时间: ${resetTime}`)
         console.log(`下次检查时间: ${new Date(nextCheckTime).toLocaleString('zh-CN')}`)
       } else {
         console.log('⚠️ 未能探测到重置时间')
@@ -89,48 +90,27 @@ export function useResetDetector() {
     } catch (error) {
       console.error('探测重置时间失败:', error)
     } finally {
-      setSystemState(prev => ({ ...prev, isDetecting: false }))
+      setIsDetecting(false)
     }
   }, [])
 
   // 手动触发探测
   const manualDetect = useCallback(async () => {
-    console.log('手动触发重置时间探测...')
+    console.log('手动触发探测...')
     await performDetection()
   }, [performDetection])
 
-  // 检查是否在探测后的等待期（5 小时内）
-  const isInWaitPeriod = useCallback(() => {
-    if (!systemState.latestResetTime) return false
-
-    const now = Date.now()
-    const lastDetectionTime = systemState.lastDetectionTime || 0
-    const waitPeriod = 5 * 60 * 60 * 1000 // 5 小时
-
-    return (now - lastDetectionTime) < waitPeriod
-  }, [systemState.latestResetTime, systemState.lastDetectionTime])
-
-  // 获取等待期剩余时间
-  const getWaitPeriodRemaining = useCallback(() => {
-    if (!systemState.lastDetectionTime) return null
-
-    const now = Date.now()
-    const waitPeriod = 5 * 60 * 60 * 1000 // 5 小时
-    const remaining = systemState.lastDetectionTime + waitPeriod - now
-
-    if (remaining <= 0) return null
-
-    return {
-      minutes: Math.round(remaining / 60000),
-      hours: Math.round(remaining / 3600000),
-    }
-  }, [systemState.lastDetectionTime])
+  // 检查是否应该探测新的重置时间
+  const shouldDetect = useCallback(() => {
+    return shouldDetectNewReset()
+  }, [])
 
   return {
-    systemState,
-    performDetection,
+    isDetecting,
+    latestResetTime,
+    detectionCount,
+    lastDetectionTime,
     manualDetect,
-    isInWaitPeriod,
-    getWaitPeriodRemaining,
+    shouldDetect,
   }
 }
