@@ -1,0 +1,11 @@
+
+> rssweb@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.3.0.6:3000
+
+✓ Starting...
+Failed to benchmark file I/O: No such file or directory (os error 2)
+✓ Ready in 918ms
