@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+  <head>
+    <title>示例 RSS 订阅</title>
+    <dateCreated>2026-02-08T00:00:00Z</dateCreated>
+    <ownerName>RSSWeb</ownerName>
+  </head>
+  <body>
+    <outline text="技术" title="技术">
+      <outline text="Hacker News" title="Hacker News" type="rss" xmlUrl="https://news.ycombinator.com/rss" htmlUrl="https://news.ycombinator.com" description="技术社区讨论" />
+      <outline text="TechCrunch" title="TechCrunch" type="rss" xmlUrl="https://techcrunch.com/feed/" htmlUrl="https://techcrunch.com" description="科技新闻和创业资讯" />
+      <outline text="The Verge" title="The Verge" type="rss" xmlUrl="https://www.theverge.com/rss/index.xml" htmlUrl="https://www.theverge.com" description="科技、艺术和文化" />
+    </outline>
+    <outline text="新闻" title="新闻">
+      <outline text="BBC News" title="BBC News" type="rss" xmlUrl="https://feeds.bbci.co.uk/news/rss.xml" htmlUrl="https://www.bbc.com/news" description="全球新闻资讯" />
+      <outline text="Reuters" title="Reuters" type="rss" xmlUrl="https://www.reutersagency.com/rss" htmlUrl="https://www.reuters.com" description="路透社新闻" />
+    </outline>
+    <outline text="开发" title="开发">
+      <outline text="Dev.to" title="Dev.to" type="rss" xmlUrl="https://dev.to/feed" htmlUrl="https://dev.to" description="开发者社区" />
+      <outline text="Hacker Noon" title="Hacker Noon" type="rss" xmlUrl="https://hackernoon.com/feed" htmlUrl="https://hackernoon.com" description="技术和开发者文章" />
+    </outline>
+  </body>
+</opml>
